@@ -20,7 +20,9 @@ const pool = require("../config/database");
                   this.maxUsage = maxUsage;
                   this.type = type;
               }
-          
+
+
+              /* Lista de Cartas */
               static async getAll() {
                   try {
                       let result = [];
@@ -36,10 +38,11 @@ const pool = require("../config/database");
                   }
               }
 
+              /* Carta por ID */
               static async getById(id) {
                 try {
-                    let [dbCards,fields] = 
-                        await pool.query("Select * from cards where crd_id=$1",[id]);/* Query usando dodos do utilizador */
+                    let [dbCards] = 
+                        await pool.query("Select * from cards where crd_id = $1",[id]);/* Query usando dodos do utilizador */
                     if (!dbCards)
                         return {status:404, result: {msg: "No card found with that identifier"}};
                     let dbCard = dbCards[0];
@@ -48,6 +51,30 @@ const pool = require("../config/database");
                 } catch (err) {
                     console.log(err);
                     return {status: 500, result: err };
+                }
+            }
+
+            static async save(newCard) {
+                try {
+                    let [dbCards, fields] =
+                        await pool.query("Select * from cards where crd_name=$1", [newCard.name]);
+                    if (dbCards.length)
+                        return {
+                            status: 400, result: [{
+                                location: "body", param: "name",
+                                msg: "That name already exists"
+                            }]
+                        };
+                    let [result] =
+                        await pool.query(`Insert into cards (crd_name, crd_img_url, crd_lore, 
+                        crd_description, crd_level, crd_cost, crd_timeout, crd_max_usage, crd_type)
+                        values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [newCard.name, newCard.url, newCard.lore,
+                        newCard.description, newCard.level, newCard.cost, newCard.timeout,
+                        newCard.maxUsage, newCard.type]);
+                    return { status: 200, result: result };
+                } catch (err) {
+                    console.log(err);
+                    return { status: 500, result: err };
                 }
             }
           }

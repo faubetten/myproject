@@ -1,0 +1,1 @@
+Criar novo Branch = "git checkout -b <Nome do branch>"
