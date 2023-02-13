@@ -17,6 +17,12 @@ router.get('/', async function(req, res, next) {
 router.get('/:id', async function(req, res, next) { /* Retira-se variavel dos parametros do URL */
     try { 
         console.log("Get card with id "+req.params.id);
+
+        /* Validador do input do utilizador */
+        const valid = validationResult(req);
+        if (!valid.isEmpty()) {
+            return res.status(400).json(valid.array());
+        }
         let result = await Card.getById(req.params.id);
         res.status(result.status).send(result.result);
     } catch(err) {
