@@ -54,6 +54,7 @@ try {
 }
 }
 
+/* Adicionar nova carta */
 static async save(newCard) {
 try {
     let dbres = await pool.query('Select * from cards where crd_name=$1', [newCard.name]);
@@ -77,6 +78,65 @@ try {
     return { status: 500, result: err };
 }
 }
+
+/* Filtrar cartas por type */
+static async filterByType(typeId){
+    try {
+        let result = [];
+        let dbResult = await pool.query('SELECT * FROM cards WHERE crd_type = $1', [typeId]);
+        for(let dbCard of dbResult.rows){
+            result.push(cardFromDB(dbCard));
+        }
+        return {status: 200, result: result};       
+    } catch (err) {
+        console.log(err);
+        return{ status: 500, result: err};      
+    }
+}
+
+
+static async filterByLoreOrDescription(text){
+    try {
+        let result = [];
+        let dbResult = await pool.query('SELECT * FROM cards WHERE crd_lore LIKE $1 OR crd_description LIKE $1', ['%'+text+'%']);
+        for( let dbCard of dbResult.rows){
+            result.push(cardFromDB(dbCard));
+        }
+        return {status: 200, result: result };
+        
+    } catch (err) {
+        console.log(err);
+        return {status: 500, result: err};
+        
+    }
+}
+
+
+static async edit(newInfo){
+    try {
+        let dbCheck1 = await pool.query('select * from cards where crd_id != $1', [newInfo.id]);
+        if(dbCheck1.lenght==0){
+            return {status:404, result: {msg: "No card found with that ID"}};
+        }
+
+        let dbCheck2 = await pool.query('select * from cards where crd_id = $1 and crd_name = $2', [newInfo.id, newInfo.name]);
+        if(dbCheck1.lenght==0){
+            return {status:400, result: {msg: "Another card already has that name"}};
+        }
+        
+    } catch (err) {
+        console.log(err);
+        return {status: 500, result: result};
+        
+    }
+} 
+
+
+
+
+
+
+
 }
 
 module.exports = Card;
