@@ -94,7 +94,7 @@ static async filterByType(typeId){
     }
 }
 
-
+// Filtrar cartas por texto
 static async filterByLoreOrDescription(text){
     try {
         let result = [];
@@ -111,18 +111,22 @@ static async filterByLoreOrDescription(text){
     }
 }
 
-
+//Editar carta ja existente
 static async edit(newInfo){
     try {
-        let dbCheck1 = await pool.query('select * from cards where crd_id != $1', [newInfo.id]);
+        let dbCheck1 = await pool.query('select * from cards where crd_id = $1', [newInfo.id]);
         if(dbCheck1.lenght==0){
             return {status:404, result: {msg: "No card found with that ID"}};
         }
 
-        let dbCheck2 = await pool.query('select * from cards where crd_id = $1 and crd_name = $2', [newInfo.id, newInfo.name]);
-        if(dbCheck1.lenght==0){
+        let dbCheck2 = await pool.query('select * from cards where crd_id != $1 and crd_name = $2', [newInfo.id, newInfo.name]);
+        if(dbCheck1.lenght){
             return {status:400, result: {msg: "Another card already has that name"}};
         }
+
+
+        let result = await pool.query('update cards set crd_name=$1, crd_img_url=$2, crd_lore=$3,crd_description=$4, crd_level=$5, crd_cost=$6, crd_timeout=$7, crd_max_usage=$8, crd_type=$9 where crd_id=$10', [newInfo.name, newInfo.url, newInfo.lore,newInfo.description, newInfo.level, newInfo.cost, newInfo.timeout,newInfo.maxUsage, newInfo.type, newInfo.id]);
+        return {status: 200, result:{msg: "Card edited"}}
         
     } catch (err) {
         console.log(err);
@@ -133,9 +137,25 @@ static async edit(newInfo){
 
 
 
+static async deleteById(id){
+    try {
+
+        let result = await pool.query('delete from cards where crd_id = $1',[id]);
+        
+        if(!result.affectedRows){
+            return {status: 404, result:{msg: "No card found with that id."}}
+        }
+        return {status: 200, result: {msg: "Card deleted"}}
+
+    } catch (err) {
+        console.log(err);
+        return {status: 500, result: err}
+        
+    }
 
 
 
+}
 
 }
 
